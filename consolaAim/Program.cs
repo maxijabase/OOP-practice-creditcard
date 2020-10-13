@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -27,7 +28,7 @@ namespace consolaAim
         public static Regex cardRegex = new Regex(cardPattern);
         public static Regex secNumRegex = new Regex(securityNumberPattern);
         public static Regex expDateRegex = new Regex(expDatePattern);
-        public static int currentCard = 1, MAX_CARDS = 30;
+        public static int currentCard = 1, MAX_CARDS = 31;
         public static string[] validBanks = { "Macro", "Nacion", "Santander", "Bancor" };
         public static Card[] cards = new Card[MAX_CARDS];
 
@@ -52,7 +53,7 @@ namespace consolaAim
                     }
                 case 2:
                     {
-                        ProcessAllCards();
+                        ParseCards();
                         break;
                     }
                 case 3:
@@ -133,40 +134,90 @@ namespace consolaAim
             Main();
         }
 
-        static void ProcessAllCards()
+        static void ParseCards()
         {
 
-            if (cards.Length == 0)
+            if (cards == null)
             {
                 Console.WriteLine("No hay ninguna tarjeta cargada. Cargue tarjetas antes de consultar esta opción.");
                 Main();
             }
 
-            int i = 1;
-            foreach (Card card in cards)
+            int validCards = 0;
+            string todayMonth = DateTime.Now.ToString("MM");
+            string todayYear = DateTime.Now.ToString("yyyy");
+
+            ArrayList[] errors = new ArrayList[MAX_CARDS];
+
+            Console.WriteLine("\n===================================================================\n");
+
+            for (int i = 1; i < cards.Length; i++)
             {
-                
-                Console.WriteLine("=Tarjeta {0}=\n\n" +
+                errors[i] = new ArrayList();
+
+                Console.WriteLine("=Tarjeta {0}=\n" +
                     "Número: {1}\n" +
                     "Código de seguridad: {2}\n" +
                     "Banco: {3}\n" +
-                    "Fecha de vencimiento: {4}\n", i, card.Number, card.Code, card.Bank, card.ExpirationDate);
-                i++;
+                    "Fecha de vencimiento: {4}\n", i, cards[i].Number, cards[i].Code, cards[i].Bank, cards[i].ExpirationDate);
+
+                if (cards[i].Code > 800 || cards[i].Code < 100)
+                {
+                    errors[i].Add("Código inválido: " + cards[i].Code);
+                }
+
+                if (cards[i].Bank != "Macro")
+                {
+                    errors[i].Add("Banco inválido: " + cards[i].Bank);
+                }
+
+                if (Convert.ToInt32(cards[i].ExpirationDate.Split('/')[1]) < Convert.ToInt32(todayYear) || (Convert.ToInt32(cards[i].ExpirationDate.Split('/')[1]) == Convert.ToInt32(todayYear) && Convert.ToInt32(cards[i].ExpirationDate.Split('/')[0]) < Convert.ToInt32(todayMonth)))
+                {
+                    errors[i].Add("Tarjeta vencida (vencimiento: " + cards[i].ExpirationDate + ")");
+                } 
+              
+                if (Convert.ToInt32(cards[i].ExpirationDate.Split('/')[1]) < 2001 && Convert.ToInt32(cards[i].ExpirationDate.Split('/')[0]) < 5)
+                {
+                    errors[i].Add("Tarjeta emitida antes del 05/01 (emisión: " + cards[i].ExpirationDate + ")");
+                }
+                
+                validCards++;
+
+                if (errors[i].Count != 0)
+                {
+
+                    string totalErrors = "";
+
+                    foreach (string error in errors[i])
+                    {
+                        totalErrors += "- " + error + "\n";
+                    }
+
+                    Console.WriteLine("TARJETA VÁLIDA: NO\n" +
+                                        "Errores: \n{0}", totalErrors);
+
+                } else
+                {
+                    Console.WriteLine("TARJETA VÁLIDA: SI\n");
+                }
+
+                Console.WriteLine("===================================================================\n");
+               
             }
+            Main();
         }
 
         static void InsertTestCards()
         {
-            Card[] testCard = new Card[MAX_CARDS];
             Random random = new Random();
 
-            for (int i = 0; i < MAX_CARDS; i++)
+            for (int i = 1; i < MAX_CARDS; i++)
             {
-                testCard[i] = new Card();
-                testCard[i].Number = Convert.ToString(random.Next(1000, 9999) + " " + random.Next(1000, 9999) + " " + random.Next(1000, 9999) + " " + random.Next(1000, 9999));
-                testCard[i].Code = random.Next(100, 999);
-                testCard[i].Bank = validBanks[random.Next(0, validBanks.Length)];
-                testCard[i].ExpirationDate = Convert.ToString(random.Next(01, 30) + "/" + random.Next(01, 12));
+                cards[i] = new Card();
+                cards[i].Number = Convert.ToString(random.Next(1000, 9999) + " " + random.Next(1000, 9999) + " " + random.Next(1000, 9999) + " " + random.Next(1000, 9999));
+                cards[i].Code = random.Next(100, 999);
+                cards[i].Bank = validBanks[random.Next(0, validBanks.Length)];
+                cards[i].ExpirationDate = Convert.ToString(random.Next(01, 12) + "/" + random.Next(1995, 2025));
             }
 
             Console.WriteLine("Valores de prueba insertados correctamente.\n\n");
