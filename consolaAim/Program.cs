@@ -1,4 +1,5 @@
-﻿using System;
+﻿using consolaAim.Clases;
+using System;
 using System.Collections;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -57,11 +58,12 @@ namespace consolaAim
                 }
                 case 4:
                 {
-                    var tClose = new Timer(1000);
+                    var tClose = new System.Timers.Timer(1000);
                     tClose.Elapsed += closeApp;
                     Console.WriteLine("===================================");
                     Console.WriteLine("HASTA LUEGO");
                     Console.WriteLine("===================================\n");
+                    tClose.Start();
                     break;
                 }
             }
@@ -222,19 +224,5 @@ namespace consolaAim
 
         }
     }
-
-    class Card
-    {
-        public Card()
-        {
-            Code = 0;
-            Number = "";
-            Bank = "";
-            ExpirationDate = "";
-        }
-        public string Number { get; set; }
-        public string Bank { get; set; }
-        public string ExpirationDate { get; set; }
-        public int Code { get; set; }
-    }
+    
 }
